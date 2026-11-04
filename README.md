@@ -3,6 +3,9 @@
 An interactive terminal portfolio served over SSH. Built with Go, Wish, Bubble Tea and Lip Gloss.
 
 ![The About page in a real local SSH session](docs/preview.png)
+---
+<img width="757" height="483" alt="image" src="https://github.com/user-attachments/assets/2449c6a5-ee5d-4c51-9217-031c0bae40ca" />
+
 
 Browse About, Projects, Research & Experience, Skills and Contact without leaving your terminal. This is a working prototype; the portfolio content currently lives in `cmd/main.go`.
 
