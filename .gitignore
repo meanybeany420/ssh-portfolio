@@ -1,0 +1,24 @@
+# Generated SSH server identities, including keys created from cmd/.
+**/.ssh/
+**/id_ed25519
+**/id_ed25519.pub
+*.pem
+*.key
+
+# Builds and test output.
+/bin/
+/dist/
+/ssh-portfolio
+/cmd/cmd
+*.test
+coverage.out
+coverage.html
+__pycache__/
+*.py[cod]
+
+# Local development notes, secrets and logs.
+/PRODUCTION_NOTES.txt
+.env
+.env.*
+*.log
+.DS_Store
