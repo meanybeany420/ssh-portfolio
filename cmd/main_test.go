@@ -2,6 +2,7 @@ package main
 
 import (
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"context"
 	"errors"
 	"flag"
@@ -204,6 +205,35 @@ func TestSessionStateIndependence(t *testing.T) {
 	first = updateKey(t, first, key(tea.KeyEnter))
 	if first.cursor != 1 || first.page != 1 || second.cursor != 0 || second.page != -1 {
 		t.Fatalf("state leaked: %+v %+v", first, second)
+	}
+}
+
+func TestViewCentersOnResize(t *testing.T) {
+	m := newModel()
+	original := m.View().Content
+	for _, size := range []tea.WindowSizeMsg{{Width: 120, Height: 40}, {Width: 160, Height: 50}} {
+		next, cmd := m.Update(size)
+		if cmd != nil {
+			t.Fatal("resize returned an unexpected command")
+		}
+		m = next.(model)
+		view := m.View()
+		lines := strings.Split(view.Content, "\n")
+		if len(lines) != size.Height {
+			t.Fatalf("resize to %dx%d: got %d rows", size.Width, size.Height, len(lines))
+		}
+		contentLines := strings.Split(original, "\n")
+		contentWidth := lipgloss.Width(original)
+		top := (size.Height - len(contentLines)) / 2
+		left := (size.Width - contentWidth) / 2
+		for i, line := range contentLines {
+			if strings.TrimRight(lines[top+i], " ") != strings.TrimRight(strings.Repeat(" ", left)+line, " ") {
+				t.Fatalf("content not centred as a left-aligned block at row %d: %q", top+i, lines[top+i])
+			}
+		}
+		if !view.AltScreen {
+			t.Fatal("resize disabled alternate screen")
+		}
 	}
 }
 

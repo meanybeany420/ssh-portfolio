@@ -44,6 +44,8 @@ var pages = []string{
 type model struct {
 	cursor int
 	page   int
+	width  int
+	height int
 }
 
 func newModel() model {
@@ -56,6 +58,10 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+
 	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -118,7 +124,13 @@ func (m model) View() tea.View {
 		"↑↓/jk navigate · enter select · esc back · q quit",
 	))
 
-	v := tea.NewView(b.String())
+	content := b.String()
+	if m.width > 0 && m.height > 0 {
+		// Pad lines to a shared width so Place centres the block, not each line.
+		content = lipgloss.NewStyle().Width(lipgloss.Width(content)).Render(content)
+		content = lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, content)
+	}
+	v := tea.NewView(content)
 	v.AltScreen = true
 	return v
 }
@@ -165,7 +177,8 @@ func pageContent(page int) string {
 			accent.Render("Tools:") + " Neovim, tmux, Git, command-line utilities"
 
 	case 4:
-		return accent.Render("GitHub:") + " github.com/meanybeany420"
+		return accent.Render("GitHub:") + " github.com/meanybeany420" +
+			accent.Render("contact:") + "owenh682 (at) proton (dot) me"
 
 	default:
 		return ""
