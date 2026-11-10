@@ -1,19 +1,21 @@
 # SSH Portfolio
 
+bored of seeing the typical web based portfolios?
+
+take a look at:
 An interactive terminal portfolio served over SSH. Built with Go, Wish, Bubble Tea and Lip Gloss.
 
 ![SSH portfolio navigation](docs/preview.png)
 
 
-Browse About, Projects, Research & Experience, Skills and Contact without leaving your terminal. This is a working prototype; the portfolio content currently lives in `cmd/main.go`.
-
+Browse my own personal portfolio without leaving your terminal. This in now fully published.
 ## Visit the public portfolio
 
 ```sh
 ssh owenhynes.com
 ```
 
-This opens the read-only portfolio, not an operating-system shell. Check the host-key fingerprint through a trusted channel before accepting a new or changed key. Press `q` to disconnect.
+This opens the read-only portfolio, not an operating-system shell. Check the host-key fingerprint through a trusted channel before accepting a new or changed key. 
 
 ## Run locally
 
@@ -31,7 +33,7 @@ In another terminal:
 ssh -p 23234 visitor@127.0.0.1
 ```
 
-The server binds to localhost by default. It generates its own host key at `.ssh/id_ed25519`; that directory is ignored by Git. Keep the key private and reuse it between starts to preserve the server's identity. The initial SSH host-key confirmation is expected when connecting for the first time.
+The server binds to localhost by default. It generates its own host key at `.ssh/id_ed25519`; that directory is ignored by Git. Keep the key private and reuse it between starts to preserve the server's identity. 
 
 To build a binary:
 
@@ -39,33 +41,6 @@ To build a binary:
 go build -o bin/ssh-portfolio ./cmd
 ./bin/ssh-portfolio
 ```
-
-## Controls
-
-| Key | Action |
-| --- | --- |
-| `↑` / `k` | Previous section, or scroll up within a page |
-| `↓` / `j` | Next section, or scroll down within a page |
-| `Enter` | Open section |
-| `Esc` / `Backspace` | Return to menu |
-| `Page Up` / `Page Down` | Scroll a page at a time |
-| `Home` / `End` | Jump to the top or bottom of a page |
-| `q` / `Ctrl+C` | Close your session |
-
-The server stays running when a visitor quits. Press `Ctrl+C` in the server terminal to shut it down.
-
-## Configuration
-
-```sh
-./bin/ssh-portfolio -listen 127.0.0.1:2222 -host-key .ssh/portfolio_key
-```
-
-| Flag | Default | Purpose |
-| --- | --- | --- |
-| `-listen` | `127.0.0.1:23234` | Listening address and port |
-| `-host-key` | `.ssh/id_ed25519` | Persistent server host-key file |
-
-`-h` lists the available flags. Relative key paths are resolved from the directory where the server starts. If you choose another key location, keep it outside Git or add an ignore rule first.
 
 ## Checks
 
