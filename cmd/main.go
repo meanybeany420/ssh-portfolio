@@ -59,8 +59,8 @@ func (m model) Init() tea.Cmd {
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
+		m.width = boundedDimension(msg.Width, maxWidth)
+		m.height = boundedDimension(msg.Height, maxHeight)
 
 	case tea.KeyPressMsg:
 		switch msg.String() {
@@ -229,17 +229,22 @@ func (l *readyListener) Accept() (net.Conn, error) {
 	return l.Listener.Accept()
 }
 
-func runServer(ctx context.Context, cfg config, logger *log.Logger, shutdownTimeout time.Duration) error {
-	server, err := wish.NewServer(
+func newPortfolioServer(cfg config) (*ssh.Server, error) {
+	return wish.NewServer(
 		wish.WithAddress(cfg.listen),
 		wish.WithHostKeyPath(cfg.hostKey),
 		wish.WithMiddleware(
-			bubbletea.Middleware(func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-				return newModel(), nil
+			bubbletea.MiddlewareWithProgramHandler(func(s ssh.Session) *tea.Program {
+				return newPortfolioProgram(newModel(), s)
 			}),
 			activeterm.Middleware(),
 		),
+		shellOnly,
 	)
+}
+
+func runServer(ctx context.Context, cfg config, logger *log.Logger, shutdownTimeout time.Duration) error {
+	server, err := newPortfolioServer(cfg)
 	if err != nil {
 		return fmt.Errorf("create SSH server: %w", err)
 	}
@@ -249,7 +254,9 @@ func runServer(ctx context.Context, cfg config, logger *log.Logger, shutdownTime
 	}
 	defer listener.Close()
 	defer server.Close()
-	ready := &readyListener{Listener: listener, ready: make(chan struct{})}
+	limited := newLimitedListener(listener)
+	defer limited.closeConnections()
+	ready := &readyListener{Listener: limited, ready: make(chan struct{})}
 	served := make(chan error, 1)
 	go func() { served <- server.Serve(ready) }()
 	select {
