@@ -30,6 +30,8 @@ jobs:
         run: go vet ./...
       - name: Check known vulnerabilities
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - name: Test deployment bundle and safe staged installer
+        run: python3 scripts/test_deployment.py
       - name: Build
         run: go build -o bin/ssh-portfolio ./cmd
       - name: Exercise a real SSH session
