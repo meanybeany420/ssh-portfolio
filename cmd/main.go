@@ -26,11 +26,12 @@ import (
 
 var (
 	accent = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#BD6757")).
-		Bold(true)
+		Foreground(lipgloss.Color("#e5dece")).
+		Bold(true).
+		Italic(true)
 
 	dim = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#C47AC1"))
+		Foreground(lipgloss.Color("#b7b1a5"))
 )
 
 var pages = []string{
@@ -46,6 +47,7 @@ type model struct {
 	page   int
 	width  int
 	height int
+	scroll int
 }
 
 func newModel() model {
@@ -61,6 +63,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = boundedDimension(msg.Width, maxWidth)
 		m.height = boundedDimension(msg.Height, maxHeight)
+		m.scroll = min(m.scroll, m.maxContentScroll())
 
 	case tea.KeyPressMsg:
 		switch msg.String() {
@@ -69,20 +72,40 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "esc", "backspace":
 			m.page = -1
+			m.scroll = 0
 
 		case "up", "k":
 			if m.page == -1 && m.cursor > 0 {
 				m.cursor--
+			} else if m.page >= 0 {
+				m.scroll = max(0, m.scroll-1)
 			}
 
 		case "down", "j":
 			if m.page == -1 && m.cursor < len(pages)-1 {
 				m.cursor++
+			} else if m.page >= 0 {
+				m.scroll = min(m.maxContentScroll(), m.scroll+1)
 			}
 
+		case "pgdown", "pgup":
+			if m.page >= 0 {
+				_, _, step := m.contentLayout()
+				if msg.String() == "pgup" {
+					step = -step
+				}
+				m.scroll = max(0, min(m.maxContentScroll(), m.scroll+step))
+			}
+		case "home":
+			m.scroll = 0
+		case "end":
+			if m.page >= 0 {
+				m.scroll = m.maxContentScroll()
+			}
 		case "enter":
 			if m.page == -1 {
 				m.page = m.cursor
+				m.scroll = 0
 			}
 		}
 	}
@@ -91,48 +114,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() tea.View {
-	var b strings.Builder
-
-	b.WriteString(accent.Render(
-		"╔══════════════════════════════════╗\n" +
-			"║       Owen Hynes Portfolio       ║\n" +
-			"╚══════════════════════════════════╝",
-	))
-
-	b.WriteString("\n\n")
-
 	if m.page == -1 {
-		b.WriteString(accent.Render("Select a section:"))
-		b.WriteString("\n\n")
-
-		for i, name := range pages {
-			if m.cursor == i {
-				b.WriteString(accent.Render("❯ " + name))
-			} else {
-				b.WriteString("  " + name)
-			}
-			b.WriteString("\n")
-		}
-	} else {
-		b.WriteString(accent.Render(pages[m.page]))
-		b.WriteString("\n\n")
-		b.WriteString(pageContent(m.page))
+		return navigationView(m)
 	}
-
-	b.WriteString("\n\n")
-	b.WriteString(dim.Render(
-		"↑↓/jk navigate · enter select · esc back · q quit",
-	))
-
-	content := b.String()
-	if m.width > 0 && m.height > 0 {
-		// Pad lines to a shared width so Place centres the block, not each line.
-		content = lipgloss.NewStyle().Width(lipgloss.Width(content)).Render(content)
-		content = lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, content)
-	}
-	v := tea.NewView(content)
-	v.AltScreen = true
-	return v
+	return contentView(m)
 }
 
 func pageContent(page int) string {
@@ -177,7 +162,7 @@ func pageContent(page int) string {
 			accent.Render("Tools:") + " Neovim, tmux, Git, command-line utilities"
 
 	case 4:
-		return accent.Render("GitHub:") + " github.com/meanybeany420" +
+		return accent.Render("GitHub:") + " github.com/meanybeany420\n" +
 			accent.Render("contact:") + "owenh682 (at) proton (dot) me"
 
 	default:

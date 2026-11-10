@@ -243,7 +243,7 @@ func TestViews(t *testing.T) {
 	if !view.AltScreen {
 		t.Fatal("alternate screen disabled")
 	}
-	for _, text := range append([]string{"Owen Hynes Portfolio", "Select a section:", "❯ About", "↑↓/jk navigate · enter select · esc back · q quit"}, pages...) {
+	for _, text := range append([]string{"OWEN HYNES", "Select a section:", "01  About", "↑↓/jk navigate · enter select · esc back · q quit"}, pages...) {
 		if !strings.Contains(view.Content, text) {
 			t.Errorf("menu missing %q", text)
 		}

@@ -128,10 +128,10 @@ def run(binary, capture=None):
             if capture:
                 capture.parent.mkdir(parents=True, exist_ok=True)
                 capture.write_bytes(first.output)
-            first.press(b'\x1b', 'Select a section:')
-            first.press(b'j\r', 'Kennel Reservation Application')
-            first.press(b'\x1b', 'Select a section:')
-            first.press(b'jjj\r', 'github.com/meanybeany420')
+            for expected in ('Kennel Reservation Application', 'THEA PhD research project',
+                             'Python, Go, Java, C++, Bash, Lua, SQL', 'github.com/meanybeany420'):
+                first.press(b'\x1b', 'Select a section:')
+                first.press(b'j\r', expected)
             first.quit()
             if server.poll() is not None:
                 raise AssertionError('Visitor quit unexpectedly stopped the server')
